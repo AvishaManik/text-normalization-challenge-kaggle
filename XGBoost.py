@@ -2,16 +2,8 @@ import pandas as pd
 import numpy as np
 import random
 import gc
-from matplotlib import pyplot as plt
-import plotly.plotly as py
-%matplotlib inline
 
 train_data = pd.read_csv('en_train.csv')
-##Check for Null values
-print("Null values per column")
-print(train_data.isnull().sum(axis = 0))
-print("\nNon-null values per column")
-print(train_data.count())
 
 max_num_features = 10
 space_letter = 0
