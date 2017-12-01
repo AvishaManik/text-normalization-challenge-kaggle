@@ -28,8 +28,10 @@ def main(argv):
     space_letter = 0
 
     x_data = []
-    y_data = pd.factorize(training_data['class'])
-    labels = y_data[1]
+    #change classes to array of numeric encodings of classes
+    encoded_classes = pd.factorize(training_data['class'])
+    #get pandas index (basiccally a special array) of label names for the encoded classes
+    labels = encoded_classes[1]
     gc.collect()
     #TODO zip the sentence id into x_data so we can use it when making context frames
     for x in training_data['before'].values:
@@ -45,38 +47,33 @@ def main(argv):
         boundary_letter=-1))
 
     x_train = x_data
-    y_train = y_data
+    y_train = encoded_classes[0]
     gc.collect()
 
-#    print('x_train:')
-#    pprint(x_train)
-#    print('x_train:')
-#    pprint(y_train)
-#
-#    x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.1, random_state=2017)
-#    gc.collect()
-#    num_class = len(labels)
-#    dtrain = xgb.DMatrix(x_train, label=y_train)
-#    dvalid = xgb.DMatrix(x_valid, label=y_valid)
-#    watchlist = [(dvalid, 'valid'), (dtrain, 'train')]
-#
-#    param = {'objective':'multi:softmax',
-#             'eta':'0.3', 'max_depth':10,
-#             'silent':1, 'nthread':-1,
-#             'num_class':num_class,
-#             'eval_metric':'merror'}
-#    model = xgb.train(param, dtrain, 50, watchlist, early_stopping_rounds=20,
-#                      verbose_eval=10)
-#    gc.collect()
-#
-#    pred = model.predict(dvalid)
-#    pred = [labels[int(x)] for x in pred]
-#    y_valid = [labels[x] for x in y_valid]
-#    x_valid = [ [ chr(x) for x in y[2 + max_num_features: 2 + max_num_features * 2]] for y in x_valid]
-#    x_valid = [''.join(x) for x in x_valid]
-#    x_valid = [re.sub('a+$', '', x) for x in x_valid]
-#
-#    gc.collect()
+    x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.1, random_state=2017)
+    gc.collect()
+    num_class = len(labels)
+    dtrain = xgb.DMatrix(x_train, label=y_train)
+    dvalid = xgb.DMatrix(x_valid, label=y_valid)
+    watchlist = [(dvalid, 'valid'), (dtrain, 'train')]
+
+    param = {'objective':'multi:softmax',
+             'eta':'0.3', 'max_depth':10,
+             'silent':1, 'nthread':-1,
+             'num_class':num_class,
+             'eval_metric':'merror'}
+    model = xgb.train(param, dtrain, 50, watchlist, early_stopping_rounds=20,
+                      verbose_eval=10)
+    gc.collect()
+
+    pred = model.predict(dvalid)
+    pred = [labels[int(x)] for x in pred]
+    y_valid = [labels[x] for x in y_valid]
+    x_valid = [ [ chr(x) for x in y[2 + max_num_features: 2 + max_num_features * 2]] for y in x_valid]
+    x_valid = [''.join(x) for x in x_valid]
+    x_valid = [re.sub('a+$', '', x) for x in x_valid]
+
+    gc.collect()
 
 
 def context_window_transform(data, pad_size, max_num_features, boundary_letter):
