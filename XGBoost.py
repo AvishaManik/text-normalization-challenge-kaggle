@@ -40,7 +40,7 @@ def main(argv):
             x_row[i] = ord(xi)
         x_data.append(x_row)
 
-    x_data = np.array(context_window_transform(
+    x_data = np.array(make_flat_context_windows(
         data=x_data,
         pad_size=2,
         max_num_features=max_num_features,
@@ -76,7 +76,7 @@ def main(argv):
     gc.collect()
 
 
-def context_window_transform(data, pad_size, max_num_features, boundary_letter):
+def make_flat_context_windows(data, pad_size, max_num_features, boundary_letter):
     #get array of zeros
     pad = np.zeros(shape=max_num_features)
     #create array of pad arrays
