@@ -31,6 +31,7 @@ def main(argv):
     y_data = pd.factorize(training_data['class'])
     labels = y_data[1]
     gc.collect()
+    #TODO zip the sentence id into x_data so we can use it when making context frames
     for x in training_data['before'].values:
         x_row = np.ones(max_num_features, dtype=int) * space_letter
         for xi, i in zip(list(str(x)), np.arange(max_num_features)):
@@ -39,7 +40,7 @@ def main(argv):
 
     x_data = np.array(context_window_transform(
         data=x_data,
-        pad_size=1,
+        pad_size=2,
         max_num_features=max_num_features,
         boundary_letter=-1))
 
@@ -47,10 +48,12 @@ def main(argv):
     y_train = y_data
     gc.collect()
 
-    pprint(x_train)
-    pprint(y_train)
-
-    x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.1, random_state=2017)
+#    print('x_train:')
+#    pprint(x_train)
+#    print('x_train:')
+#    pprint(y_train)
+#
+#    x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.1, random_state=2017)
 #    gc.collect()
 #    num_class = len(labels)
 #    dtrain = xgb.DMatrix(x_train, label=y_train)
@@ -77,18 +80,32 @@ def main(argv):
 
 
 def context_window_transform(data, pad_size, max_num_features, boundary_letter):
-    pad = np.zeros(max_num_features)
-    pad = [pad for x in np.arange(pad_size)]
-    data = pad + data + pad
-    neo_data = []
-    for i in np.arange(len(data) - pad_size * 2):
+    #get array of zeros
+    pad = np.zeros(shape=max_num_features)
+    #create array of pad arrays
+    pads = list()
+    for temp in range(pad_size):
+        pads.append(pad)
+    #example of what we're doing:
+    #0   123   0   01230
+    #0 + 232 + 0 = 02320
+    #0   321   0   03210
+    data = pads + data + pads
+    context_windows = []
+    for lower_bound in range(len(data) - pad_size * 2):
         row = []
-        for x in data[i : i + pad_size * 2 + 1]:
+        #calc how many tokens (lines) to look at
+        context_window_size = pad_size * 2 + 1
+        upper_bound = lower_bound + context_window_size
+        #get a window of the data (this is a frame that moves by 1 each iteration)
+        context_window = data[lower_bound:upper_bound]
+        for word in context_window:
             row.append([boundary_letter])
-            row.append(x)
+            row.append(word)
         row.append([boundary_letter])
-        neo_data.append([int(x) for y in row for x in y])
-    return neo_data
+        #append the context window to context windows
+        context_windows.append([int(x) for y in row for x in y])
+    return context_windows
 
 
 
