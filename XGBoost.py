@@ -30,7 +30,7 @@ def main(argv):
     x_data = []
     #change classes to array of numeric encodings of classes
     encoded_classes = pd.factorize(training_data['class'])
-    #get pandas index (basiccally a special array) of label names for the encoded classes
+    #get pandas index (basically a special array) of label names for the encoded classes
     labels = encoded_classes[1]
     gc.collect()
     #TODO zip the sentence id into x_data so we can use it when making context frames
@@ -42,7 +42,7 @@ def main(argv):
 
     x_data = np.array(make_flat_context_windows(
         data=x_data,
-        pad_size=2,
+        pad_size=1,
         max_num_features=max_num_features,
         boundary_letter=-1))
 
@@ -66,12 +66,32 @@ def main(argv):
                       verbose_eval=10)
     gc.collect()
 
-    pred = model.predict(dvalid)
-    pred = [labels[int(x)] for x in pred]
-    y_valid = [labels[x] for x in y_valid]
-    x_valid = [ [ chr(x) for x in y[2 + max_num_features: 2 + max_num_features * 2]] for y in x_valid]
-    x_valid = [''.join(x) for x in x_valid]
-    x_valid = [re.sub('a+$', '', x) for x in x_valid]
+    encoded_predictions = model.predict(dvalid)
+    predictions = list()
+    observations = list()
+    for encoded_prediction, encoded_observation in zip(encoded_predictions, y_valid):
+        prediction = labels[int(encoded_prediction)]
+        observation = labels[int(encoded_observation)]
+        predictions.append(prediction)
+        observations.append(observation)
+
+    #TODO figure out what this is for
+#    x_valid = [ [ chr(x) for x in y[2 + max_num_features: 2 + max_num_features * 2]] for y in x_valid]
+    x_valid2 = list()
+    for y in x_valid:
+        for x in y[2 + max_num_features: 2 + max_num_features * 2]:
+            x_valid2.append(chr(int(x)))
+    print('x_valid2: ', len(x_valid2), ' ', x_valid2)
+
+    #TODO delete? this line converts the type so he can regex it, but why remove all 'a' characters?
+#    x_valid = [''.join(x) for x in x_valid2]
+#    x_valid = [re.sub('a+$', '', x) for x in x_valid]
+    x_valid = list()
+    for char in x_valid2:
+        converted_char = ''.join(char)
+        not_an_a_char = re.sub('a+$', '', converted_char)
+        x_valid.append(not_an_a_char)
+    print('x_valid: ', len(x_valid), ' ', x_valid)
 
     gc.collect()
 
