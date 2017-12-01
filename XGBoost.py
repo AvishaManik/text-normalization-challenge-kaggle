@@ -103,6 +103,7 @@ def context_window_transform(data, pad_size, max_num_features, boundary_letter):
             flattened_context_window.append(boundary_letter)
             flattened_context_window.extend(word)
         flattened_context_window.append(boundary_letter)
+        #append window list to list of window lists
         flattened_context_windows.append(flattened_context_window)
     return flattened_context_windows
 
