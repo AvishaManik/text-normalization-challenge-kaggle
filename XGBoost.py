@@ -91,21 +91,20 @@ def context_window_transform(data, pad_size, max_num_features, boundary_letter):
     #0 + 232 + 0 = 02320
     #0   321   0   03210
     data = pads + data + pads
-    context_windows = []
+    flattened_context_windows = []
     for lower_bound in range(len(data) - pad_size * 2):
-        row = []
+        flattened_context_window = []
         #calc how many tokens (lines) to look at
         context_window_size = pad_size * 2 + 1
         upper_bound = lower_bound + context_window_size
         #get a window of the data (this is a frame that moves by 1 each iteration)
         context_window = data[lower_bound:upper_bound]
         for word in context_window:
-            row.append([boundary_letter])
-            row.append(word)
-        row.append([boundary_letter])
-        #append the context window to context windows
-        context_windows.append([int(x) for y in row for x in y])
-    return context_windows
+            flattened_context_window.append(boundary_letter)
+            flattened_context_window.extend(word)
+        flattened_context_window.append(boundary_letter)
+        flattened_context_windows.append(flattened_context_window)
+    return flattened_context_windows
 
 
 
