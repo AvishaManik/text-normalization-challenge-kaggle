@@ -33,7 +33,7 @@ def main(argv):
     #get pandas index (basically a special array) of label names for the encoded classes
     labels = encoded_classes[1]
     gc.collect()
-    for before_value, sentence_id in training_data['before'].values:
+    for before_value in training_data['before'].values:
         #initialize array of space characters
         space_padded_token = np.ones(max_num_features, dtype=int) * space_letter
         #split the token (word) into a list of characters (much like a string in C)
@@ -65,7 +65,7 @@ def main(argv):
         'eta':'0.3',
         'max_depth':10,
         'silent':False,
-        'n_jobs':64,
+        'n_jobs':64, #num threads to use
         'num_class':num_class,
         'eval_metric':'merror'}
     model = xgb.train(params=xgbregressor_params,
