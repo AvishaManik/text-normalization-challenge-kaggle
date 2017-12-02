@@ -4,17 +4,16 @@ from pprint import pprint
 import pandas as pd
 import numpy as np
 import xgboost as xgb
-import re
 import gc
 import sys
 
-usage = 'XGBoost.py /path/to/input/file.csv'
+usage = 'XGBoost.py /path/to/input/file.csv /path/to/save/model/'
 
-if len(sys.argv) < 2:
+if len(sys.argv) < 3:
     print('not enough arguments\n')
     print(usage)
     sys.exit(1)
-if len(sys.argv) > 2:
+if len(sys.argv) > 3:
     print('too many arguments\n')
     print(usage)
     sys.exit(1)
@@ -22,31 +21,36 @@ if len(sys.argv) > 2:
 
 def main(argv):
     input_data_path = Path(argv[1])
+    model_output_data_path = Path(argv[2])
     training_data = pd.read_csv(input_data_path)
 
     max_num_features = 10
     space_letter = 0
 
-    x_data = []
+    space_padded_tokens = []
     #change classes to array of numeric encodings of classes
     encoded_classes = pd.factorize(training_data['class'])
     #get pandas index (basically a special array) of label names for the encoded classes
     labels = encoded_classes[1]
     gc.collect()
     #TODO zip the sentence id into x_data so we can use it when making context frames
-    for x in training_data['before'].values:
-        x_row = np.ones(max_num_features, dtype=int) * space_letter
-        for xi, i in zip(list(str(x)), np.arange(max_num_features)):
-            x_row[i] = ord(xi)
-        x_data.append(x_row)
+    for before_value, sentence_id in training_data['before'].values:
+        #initialize array of space characters
+        space_padded_token = np.ones(max_num_features, dtype=int) * space_letter
+        #split the token (word) into a list of characters (much like a string in C)
+        before_value_c_str = list(str(before_value))
+        for before_value_char, i in zip(before_value_c_str, range(max_num_features)):
+            #get the unicode code point of given character
+            space_padded_token[i] = ord(before_value_char)
+        space_padded_tokens.append(space_padded_token)
 
-    x_data = np.array(make_flat_context_windows(
-        data=x_data,
+    space_padded_tokens = np.array(make_flat_context_windows(
+        data=space_padded_tokens,
         pad_size=1,
         max_num_features=max_num_features,
         boundary_letter=-1))
 
-    x_train = x_data
+    x_train = space_padded_tokens
     y_train = encoded_classes[0]
     gc.collect()
 
@@ -59,11 +63,11 @@ def main(argv):
 
     param = {'objective':'multi:softmax',
              'eta':'0.3', 'max_depth':10,
-             'silent':1, 'nthread':-1,
+             'silent':False, 'n_jobs':64,
              'num_class':num_class,
              'eval_metric':'merror'}
     model = xgb.train(param, dtrain, 50, watchlist, early_stopping_rounds=20,
-                      verbose_eval=10)
+                      verbose_eval=1)
     gc.collect()
 
     encoded_predictions = model.predict(dvalid)
@@ -75,25 +79,9 @@ def main(argv):
         predictions.append(prediction)
         observations.append(observation)
 
-    #TODO figure out what this is for
-#    x_valid = [ [ chr(x) for x in y[2 + max_num_features: 2 + max_num_features * 2]] for y in x_valid]
-    x_valid2 = list()
-    for y in x_valid:
-        for x in y[2 + max_num_features: 2 + max_num_features * 2]:
-            x_valid2.append(chr(int(x)))
-    print('x_valid2: ', len(x_valid2), ' ', x_valid2)
-
-    #TODO delete? this line converts the type so he can regex it, but why remove all 'a' characters?
-#    x_valid = [''.join(x) for x in x_valid2]
-#    x_valid = [re.sub('a+$', '', x) for x in x_valid]
-    x_valid = list()
-    for char in x_valid2:
-        converted_char = ''.join(char)
-        not_an_a_char = re.sub('a+$', '', converted_char)
-        x_valid.append(not_an_a_char)
-    print('x_valid: ', len(x_valid), ' ', x_valid)
-
     gc.collect()
+
+    model.save_model(model_output_data_path.joinpath(Path('booster_model')).name)
 
 
 def make_flat_context_windows(data, pad_size, max_num_features, boundary_letter):

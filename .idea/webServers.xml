@@ -2,8 +2,8 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="2e894cfa-48df-41a1-b4fc-bd29d6b0721f" name="booster" url="http://ec2-52-32-2-180.us-west-2.compute.amazonaws.com">
-        <fileTransfer host="ec2-52-32-2-180.us-west-2.compute.amazonaws.com" port="22" privateKey="C:\cygwin64\home\kdbolton\.ssh\cloudPumpkinKey1.pem" rootFolder="/home/ubuntu" accessType="SFTP" keyPair="true">
+      <webServer id="2e894cfa-48df-41a1-b4fc-bd29d6b0721f" name="booster" url="http://ec2-34-210-29-61.us-west-2.compute.amazonaws.com">
+        <fileTransfer host="ec2-34-210-29-61.us-west-2.compute.amazonaws.com" port="22" privateKey="C:\cygwin64\home\kdbolton\.ssh\cloudPumpkinKey1.pem" rootFolder="/home/ubuntu" accessType="SFTP" keyPair="true">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" />
           </advancedOptions>
