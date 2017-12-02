@@ -60,12 +60,19 @@ def main(argv):
     dvalid = xgb.DMatrix(x_valid, label=y_valid)
     watchlist = [(dvalid, 'valid'), (dtrain, 'train')]
 
-    param = {'objective':'multi:softmax',
-             'eta':'0.3', 'max_depth':10,
-             'silent':False, 'n_jobs':64,
-             'num_class':num_class,
-             'eval_metric':'merror'}
-    model = xgb.train(param, dtrain, 50, watchlist, early_stopping_rounds=20,
+    xgbregressor_params = {
+        'objective':'multi:softmax',
+        'eta':'0.3',
+        'max_depth':10,
+        'silent':False,
+        'n_jobs':64,
+        'num_class':num_class,
+        'eval_metric':'merror'}
+    model = xgb.train(params=xgbregressor_params,
+                      dtrain=dtrain,
+                      num_boost_round=50,
+                      evals=watchlist,
+                      early_stopping_rounds=20,
                       verbose_eval=1)
     gc.collect()
 
