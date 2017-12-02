@@ -25,7 +25,6 @@ def main(argv):
     training_data = pd.read_csv(input_data_path)
 
     max_num_features = 10
-    space_letter = 0
 
     space_padded_tokens = []
     #change classes to array of numeric encodings of classes
@@ -33,23 +32,20 @@ def main(argv):
     #get pandas index (basically a special array) of label names for the encoded classes
     labels = encoded_classes[1]
     gc.collect()
-    for before_value in training_data['before'].values:
-        #initialize array of space characters
-        space_padded_token = np.ones(max_num_features, dtype=int) * space_letter
-        #split the token (word) into a list of characters (much like a string in C)
-        before_value_c_str = list(str(before_value))
-        for before_value_char, i in zip(before_value_c_str, range(max_num_features)):
-            #get the unicode code point of given character
-            space_padded_token[i] = ord(before_value_char)
-        space_padded_tokens.append(space_padded_token)
 
-    space_padded_tokens = np.array(make_flat_context_windows(
-        data=space_padded_tokens,
+    training_data = make_encoded_space_padded_tokens(
+        data=training_data['before'].values,
+        max_num_features=10,
+        space_char=0
+    )
+
+    training_data = np.array(make_flat_context_windows(
+        data=training_data,
         pad_size=1,
         max_num_features=max_num_features,
         boundary_letter=-1))
 
-    x_train = space_padded_tokens
+    x_train = training_data
     y_train = encoded_classes[0]
     gc.collect()
 
@@ -90,6 +86,18 @@ def main(argv):
 
     model.save_model(model_output_data_path.joinpath(Path('booster_model')).name)
 
+def make_encoded_space_padded_tokens(data, max_num_features, space_char):
+    space_padded_tokens = list()
+    for before_value in data:
+        #initialize array of space characters
+        space_padded_token = np.ones(max_num_features, dtype=int) * space_char
+        #split the token (word) into a list of characters (much like a string in C)
+        before_value_c_str = list(str(before_value))
+        for before_value_char, i in zip(before_value_c_str, range(max_num_features)):
+            #get the unicode code point of given character
+            space_padded_token[i] = ord(before_value_char)
+        space_padded_tokens.append(space_padded_token)
+    return space_padded_tokens
 
 def make_flat_context_windows(data, pad_size, max_num_features, boundary_letter):
     #get array of zeros
