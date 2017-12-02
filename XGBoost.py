@@ -33,7 +33,6 @@ def main(argv):
     #get pandas index (basically a special array) of label names for the encoded classes
     labels = encoded_classes[1]
     gc.collect()
-    #TODO zip the sentence id into x_data so we can use it when making context frames
     for before_value, sentence_id in training_data['before'].values:
         #initialize array of space characters
         space_padded_token = np.ones(max_num_features, dtype=int) * space_letter
