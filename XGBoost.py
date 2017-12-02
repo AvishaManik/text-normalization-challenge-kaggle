@@ -53,7 +53,7 @@ def main(argv):
     y_train = encoded_classes[0]
     gc.collect()
 
-    x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.1, random_state=2017)
+    x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.1, random_state=1045)
     gc.collect()
     num_class = len(labels)
     dtrain = xgb.DMatrix(x_train, label=y_train)
@@ -62,12 +62,13 @@ def main(argv):
 
     xgbregressor_params = {
         'objective':'multi:softmax',
-        'eta':'0.3',
+        'learning_rate':'0.3',
         'max_depth':10,
         'silent':False,
         'n_jobs':64, #num threads to use
         'num_class':num_class,
-        'eval_metric':'merror'}
+        'eval_metric':'merror'
+    }
     model = xgb.train(params=xgbregressor_params,
                       dtrain=dtrain,
                       num_boost_round=50,
