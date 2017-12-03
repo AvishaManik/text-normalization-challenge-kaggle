@@ -32,7 +32,7 @@ def main(argv):
     #get pandas index (basically a special array) of label names for the encoded classes
     labels = encoded_classes[1]
     #write indexed labels. This ordering will be needed to decode any predictions made by this model
-    labels.to_frame(index=False).to_csv(path_or_buf=str(Path('ordered_labels')), header=False)
+    labels.to_frame(index=False).to_csv(path_or_buf=str(Path('label_index.csv')), header=False)
     gc.collect()
 
     training_data = make_encoded_space_padded_tokens(
