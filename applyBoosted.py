@@ -18,6 +18,7 @@ if len(sys.argv) > 4:
 
 
 def main(argv):
+    max_num_features = 10
     model_filepath = Path(argv[1])
     model = xgb.Booster(model_file=str(model_filepath))
 
@@ -31,9 +32,15 @@ def main(argv):
     test_data = input_data['before'].values
     test_data = make_encoded_space_padded_tokens(
         data=test_data,
-        max_num_features=100,
+        max_num_features=max_num_features,
         space_char=0
     )
+    test_data = np.array(make_flat_context_windows(
+        data=test_data,
+        pad_size=1,
+        max_num_features=max_num_features,
+        boundary_letter=-1
+    ))
 
     test_dm = xgb.DMatrix(data=test_data)
     encoded_predictions = model.predict(data=test_dm)
@@ -64,12 +71,6 @@ def make_encoded_space_padded_tokens(data, max_num_features, space_char):
             space_padded_token[i] = ord(before_value_char)
         space_padded_tokens.append(space_padded_token)
     return space_padded_tokens
-
-    space_padded_tokens = np.array(make_flat_context_windows(
-        data=space_padded_tokens,
-        pad_size=1,
-        max_num_features=max_num_features,
-        boundary_letter=-1))
 
 
 def make_flat_context_windows(data, pad_size, max_num_features, boundary_letter):
