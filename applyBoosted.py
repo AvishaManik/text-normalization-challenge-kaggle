@@ -5,29 +5,32 @@ import numpy as np
 import xgboost as xgb
 import sys
 
-usage = 'applyBoosted.py /path/to/model/file /path/to/label_index/file.csv /path/to/input/file.csv'
+usage = 'applyBoosted.py /path/to/model/file /path/to/label_index/file.csv /path/to/input/file.csv /path/to/output/file.csv'
 
-if len(sys.argv) < 4:
+if len(sys.argv) < 5:
     print('not enough arguments\n')
     print(usage)
     sys.exit(1)
-if len(sys.argv) > 4:
+if len(sys.argv) > 5:
     print('too many arguments\n')
     print(usage)
     sys.exit(1)
 
 
 def main(argv):
-    max_num_features = 10
     model_filepath = Path(argv[1])
+    label_encodings_filepath = Path(argv[2])
+    input_data_path = Path(argv[3])
+    output_data_path = Path(argv[4])
+
+    max_num_features = 10
+
     model = xgb.Booster(model_file=str(model_filepath))
 
-    label_encodings_filepath = Path(argv[2])
     label_encodings = pd.read_csv(label_encodings_filepath, header=None, index_col=None)[1]
     print('label_encodings: ')
     pprint(label_encodings)
 
-    input_data_path = Path(argv[3])
     input_data = pd.read_csv(input_data_path)
     test_data = input_data['before'].values
     test_data = make_encoded_space_padded_tokens(
@@ -47,6 +50,7 @@ def main(argv):
 
     labeled_data = decode_join(data=input_data, encoded_labels=encoded_predictions, label_encodings=label_encodings)
     print(labeled_data)
+    labeled_data.to_csv(output_data_path)
 
 
 def decode_join(data, encoded_labels, label_encodings):
