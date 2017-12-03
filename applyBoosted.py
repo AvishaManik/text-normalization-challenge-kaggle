@@ -1,16 +1,17 @@
 from pathlib import Path
+from pprint import pprint
 import pandas as pd
 import numpy as np
 import xgboost as xgb
 import sys
 
-usage = 'applyBoosted.py /path/to/model/file /path/to/input/file.csv'
+usage = 'applyBoosted.py /path/to/model/file /path/to/label_index/file.csv /path/to/input/file.csv'
 
-if len(sys.argv) < 3:
+if len(sys.argv) < 4:
     print('not enough arguments\n')
     print(usage)
     sys.exit(1)
-if len(sys.argv) > 3:
+if len(sys.argv) > 4:
     print('too many arguments\n')
     print(usage)
     sys.exit(1)
@@ -20,17 +21,36 @@ def main(argv):
     model_filepath = Path(argv[1])
     model = xgb.Booster(model_file=str(model_filepath))
 
-    test_data_path = Path(argv[2])
-    test_data = pd.read_csv(test_data_path)
-    test_data = test_data['before'].values
+    label_encodings_filepath = Path(argv[2])
+    label_encodings = pd.read_csv(label_encodings_filepath, header=None, index_col=None)[1]
+    print('label_encodings: ')
+    pprint(label_encodings)
+
+    input_data_path = Path(argv[3])
+    input_data = pd.read_csv(input_data_path)
+    test_data = input_data['before'].values
     test_data = make_encoded_space_padded_tokens(
         data=test_data,
-        max_num_features=10,
+        max_num_features=100,
         space_char=0
     )
 
     test_dm = xgb.DMatrix(data=test_data)
-    model.predict(data=test_dm)
+    encoded_predictions = model.predict(data=test_dm)
+
+    labeled_data = decode_join(data=input_data, encoded_labels=encoded_predictions, label_encodings=label_encodings)
+    print(labeled_data)
+
+
+def decode_join(data, encoded_labels, label_encodings):
+    labels = list()
+    for encoded_label in encoded_labels:
+        label = label_encodings[int(encoded_label)]
+        labels.append(label)
+    labeled_data = data
+    labeled_data['class'] = pd.Series(labels).values
+    return labeled_data
+
 
 def make_encoded_space_padded_tokens(data, max_num_features, space_char):
     space_padded_tokens = list()
