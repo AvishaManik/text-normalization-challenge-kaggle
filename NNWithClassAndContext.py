@@ -59,16 +59,20 @@ def main(argv):
     x_train = pd.DataFrame(keras.utils.to_categorical(encoded_classes[0], len(labels)), columns=labels)
     x_train = x_train.join(preprocessed_before_tokens, lsuffix='', rsuffix='_before')
 #    x_train['sentence_id'] = training_data['sentence_id']
-    y_train = preprocessed_after_tokens
+    y_train = pd.DataFrame(preprocessed_after_tokens)
 
     gc.collect()
 
     x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.1, random_state=1045)
     gc.collect()
-    num_class = len(labels)
+
+    x_train = x_train.as_matrix()
+    x_valid = x_valid.as_matrix()
+    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+    x_valid = np.reshape(x_valid, (x_valid.shape[0], x_valid.shape[1], 1))
 
     model = Sequential()
-    model.add(LSTM(128, dropout=0.2, recurrent_dropout=0.2, input_shape=((max_num_features * 3) + 4, 1)))
+    model.add(LSTM(128, dropout=0.2, recurrent_dropout=0.2, input_shape=((max_num_features * 3) + 4 + len(labels), 1), output_shape=(y_train.shape)))
     model.add(Dense(32, activation='relu'))
     model.add(Dropout(0.2))
     model.add(Dense(len(labels), activation='softmax'))
@@ -80,6 +84,7 @@ def main(argv):
     score = model.evaluate(x_valid, y_valid, verbose=0)
     print("Accuracy on validaton dataset")
     print(score[1])
+
 
     #model.save_model(model_output_data_path.joinpath(Path('booster_model')).name)
 
