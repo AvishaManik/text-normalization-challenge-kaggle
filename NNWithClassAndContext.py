@@ -72,10 +72,10 @@ def main(argv):
     x_valid = np.reshape(x_valid, (x_valid.shape[0], x_valid.shape[1], 1))
 
     model = Sequential()
-    model.add(LSTM(128, dropout=0.2, recurrent_dropout=0.2, input_shape=((max_num_features * 3) + 4 + len(labels), 1), output_shape=(y_train.shape)))
+    model.add(LSTM(128, dropout=0.2, recurrent_dropout=0.2, input_shape=((max_num_features * 3) + 4 + len(labels), 1)))
     model.add(Dense(32, activation='relu'))
     model.add(Dropout(0.2))
-    model.add(Dense(len(labels), activation='softmax'))
+    model.add(Dense(y_train.shape[1], activation='softmax'))
 
     model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
 
