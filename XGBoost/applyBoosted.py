@@ -27,6 +27,8 @@ def main(argv):
 
     model = xgb.Booster(model_file=str(model_filepath))
 
+    xgb.plot_tree(model, fmap='', num_trees=0, rankdir='UT', ax=None)
+
     label_encodings = pd.read_csv(label_encodings_filepath, header=None, index_col=None)[1]
     print('label_encodings: ')
     pprint(label_encodings)
